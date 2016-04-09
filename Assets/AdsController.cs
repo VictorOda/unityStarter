@@ -2,21 +2,37 @@
 using UnityEngine.UI;
 using UnityEngine.Advertisements;
 using System.Collections;
+using System.Collections.Generic;
 using GoogleMobileAds.Api;
+using Facebook.Unity;
 
 public class AdsController : MonoBehaviour {
 
 	public static AdsController instance;
 
+	// UnityAds
 	public string unityAdsZoneId, unityAdsZoneIdRewarded;
 	public string iOSAdMobId, androidAdMobId;
 
+	// AdMob
 	string adMobUnityId;
-
-
-
 	[HideInInspector]
 	public InterstitialAd interstitial;
+
+	// Facebook
+	private List<string> permissions = new List<string>() {"publish_actions"};
+
+
+	void Awake ()
+	{
+		if (!FB.IsInitialized) {
+			// Initialize the Facebook SDK
+			FB.Init(InitCallback, OnHideUnity);
+		} else {
+			// Already initialized, signal an app activation App Event
+			FB.ActivateApp();
+		}
+	}
 
 	void Start () {
 		if(!instance)
@@ -32,40 +48,39 @@ public class AdsController : MonoBehaviour {
 		#endif
 
 		RequestInterstitial();
-
 	}
 
 	#region UnitAds
-	public static void ShowUnityAds (bool rewarded)
+	public void ShowUnityAds (bool rewarded)
 	{
 		if(rewarded)
 		{
-			if (string.IsNullOrEmpty (instance.unityAdsZoneIdRewarded)) 
-				instance.unityAdsZoneIdRewarded = null;
+			if (string.IsNullOrEmpty(unityAdsZoneIdRewarded)) 
+				unityAdsZoneIdRewarded = null;
 
-			if(!Advertisement.IsReady(instance.unityAdsZoneIdRewarded))
+			if(!Advertisement.IsReady(unityAdsZoneIdRewarded))
 			{
 				Debug.Log("UnityAds rewarded zone not ready");
 				return;
 			}
 
 			ShowOptions options = new ShowOptions();
-			options.resultCallback = instance.HandleShowResult;
+			options.resultCallback = HandleShowResult;
 
-			Advertisement.Show (instance.unityAdsZoneIdRewarded, options);
+			Advertisement.Show(unityAdsZoneIdRewarded, options);
 		}
 		else
 		{
-			if (string.IsNullOrEmpty (instance.unityAdsZoneId)) 
+			if (string.IsNullOrEmpty(unityAdsZoneId)) 
 				instance.unityAdsZoneId = null;
 
-			if(!Advertisement.IsReady(instance.unityAdsZoneId))
+			if(!Advertisement.IsReady(unityAdsZoneId))
 			{
 				Debug.Log("UnityAds zone not ready");
 				return;
 			}
 
-			Advertisement.Show (instance.unityAdsZoneId);
+			Advertisement.Show(unityAdsZoneId);
 		}
 	}
 
@@ -105,6 +120,62 @@ public class AdsController : MonoBehaviour {
 		if(interstitial.IsLoaded()) {
 			interstitial.Show();
 		}
+	}
+	#endregion
+
+	#region Facebook
+	private void InitCallback ()
+	{
+		if (FB.IsInitialized) {
+			// Signal an app activation App Event
+			FB.ActivateApp();
+		} else {
+			Debug.Log("Failed to Initialize the Facebook SDK");
+		}
+	}
+
+	private void OnHideUnity (bool isGameShown)
+	{
+		if (!isGameShown) {
+			// Pause the game - we will need to hide
+			Time.timeScale = 0;
+		} else {
+			// Resume the game - we're getting focus again
+			Time.timeScale = 1;
+		}
+	}
+
+	public void FBLogin () {
+		if(FB.IsLoggedIn) {
+			ShareScore();
+		} else {
+			FB.LogInWithPublishPermissions(permissions, AuthCallback);
+		}
+	}
+
+	void AuthCallback (ILoginResult result) {
+		if(FB.IsLoggedIn) {
+			ShareScore();
+			Debug.Log("FB login worked!");
+		} else {
+			Debug.Log("FB login failed!");
+			Invoke("InvokeLogin", 0.1f);
+		}
+	}
+
+	void InvokeLogin() {
+		if(FB.IsLoggedIn) {
+			ShareScore();
+		}
+	}
+
+	public void ShareScore() {
+		FB.ShareLink(
+			new System.Uri("http://alphaquestgames.com/games/orc-smasher/"),
+			"Olha esse jogo! Eu estou jogando Marvin The Volcano e é muito legal!",
+			"Eu consegui " + "ScoreManager.score.ToString()" + " pontos! Você consegue fazer melhor?",
+			new System.Uri("http://alphaquestgames.com/wp-content/uploads/2014/12/icone-site-orc.png")
+		);
 	}
 	#endregion
 }
