@@ -1,4 +1,4 @@
-# unityAdsController
+# unityStarter
 
 A simple starter template for Unity. It helps the developer to implement the following functionalities:
 - UnityAds
