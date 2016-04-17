@@ -8,12 +8,15 @@ public class AdsController : MonoBehaviour {
 
 	public static AdsController instance;
 
-	// UnityAds
-	public string unityAdsZoneId, unityAdsZoneIdRewarded;
-	public string iOSAdMobId, androidAdMobId;
+	[Header ("UnityAds")]
+	public string unityAdsZoneId;
+	public string unityAdsZoneIdRewarded;
 
-	// AdMob
-	string adMobUnityId;
+	[Header ("AdMob")]
+	public string iOSAdMobInterstitialId;
+	public string androidAdMobInterstitialId;
+	public string iOSAdMobBannerId, androidAdMobBannerId;
+	string adMobInterstitialId, adMobBannerId;
 	[HideInInspector]
 	public InterstitialAd interstitial;
 
@@ -25,11 +28,14 @@ public class AdsController : MonoBehaviour {
 		DontDestroyOnLoad(this.gameObject);
 
 		#if UNITY_ANDROID
-		adMobUnityId = androidAdMobId;
+		adMobInterstitialId = androidAdMobId;
+		adMobBannerId = androidAdMobBannerId;
 		#elif UNITY_IPHONE
-		adMobUnityId = iOSAdMobId;
+		adMobInterstitialId = iOSAdMobInterstitialId;
+		adMobBannerId = iOSAdMobBannerId;
 		#else
 		adMobUnityId = "unexpected_platform";
+		adMobBannerId = "unexpected_platform";
 		#endif
 
 		RequestInterstitial();
@@ -94,7 +100,7 @@ public class AdsController : MonoBehaviour {
 	#region AdMob
 	private void RequestInterstitial () {
 		// Initialize an InterstitialAd.
-		interstitial = new InterstitialAd(adMobUnityId);
+		interstitial = new InterstitialAd(adMobInterstitialId);
 		// Create an empty ad request.
 		AdRequest request = new AdRequest.Builder().Build();
 		// Load the interstitial with the request.
@@ -105,6 +111,41 @@ public class AdsController : MonoBehaviour {
 		if(interstitial.IsLoaded()) {
 			interstitial.Show();
 		}
+	}
+
+	/// <summary>
+	/// Shows the ad mob banner at a certain position.
+	/// Positions available: Top, TopLeft, TopRight, Bottom, BottomLeft, BottomRight;
+	/// Bottom is the default position.
+	/// </summary>
+	/// <param name="position">Position.</param>
+	public void ShowAdMobBanner (string position) {
+
+		AdPosition adPosition;
+
+		switch(position) {
+		case "Top": adPosition = AdPosition.Top;
+			break;
+		case "TopLeft": adPosition = AdPosition.TopLeft;
+			break;
+		case "TopRight": adPosition = AdPosition.TopRight;
+			break;
+		case "Bottom": adPosition = AdPosition.Bottom;
+			break;
+		case "BottomLeft": adPosition = AdPosition.BottomLeft;
+			break;
+		case "BottomRight": adPosition = AdPosition.BottomRight;
+			break;
+		default: adPosition = AdPosition.Bottom;
+			break;
+		}
+
+		// Create a 320x50 banner at the top of the screen.
+		BannerView bannerView = new BannerView(adMobBannerId, AdSize.Banner, adPosition);
+		// Create an empty ad request.
+		AdRequest request = new AdRequest.Builder().Build();
+		// Load the banner with the request.
+		bannerView.LoadAd(request);
 	}
 	#endregion
 
