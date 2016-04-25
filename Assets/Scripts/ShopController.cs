@@ -35,6 +35,7 @@ public class ShopController : MonoBehaviour, IStoreListener {
 	private string kProductNameGooglePlayNonConsumable = "com.unity3d.test.services.purchasing.nonconsumable";	// Google Play Store identifier for the non-consumable product.
 	private string kProductNameGooglePlaySubscription =  "com.unity3d.test.services.purchasing.subscription";  	// Google Play Store identifier for the subscription product.
 
+
 	void Start()
 	{
 		if(!instance)
@@ -164,7 +165,7 @@ public class ShopController : MonoBehaviour, IStoreListener {
 		}
 	}
 		
-	void BuyProductID(string productId)
+	public void BuyProductID(string productId)
 	{
 		// If the stores throw an unexpected exception, use try..catch to protect my logic here.
 		try
@@ -208,6 +209,7 @@ public class ShopController : MonoBehaviour, IStoreListener {
 
 	/// <summary>
 	/// Add a function to every item you want to sell.
+	/// Or use the ID of the product with the BuyProductID function.
 	/// </summary>
 
 	public void BuyConsumable()
