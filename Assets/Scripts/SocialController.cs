@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SocialPlatforms;
 using Facebook.Unity;
 
 
@@ -10,6 +11,9 @@ public class SocialController : MonoBehaviour {
 
 	// Facebook
 	private List<string> permissions = new List<string>() {"publish_actions"};
+
+	// Social
+	private string leaderboardId = "";
 
 	void Awake ()
 	{
@@ -25,6 +29,10 @@ public class SocialController : MonoBehaviour {
 	void Start () {
 		if(!instance)
 			instance = this;
+
+		// Authenticate and register a ProcessAuthentication callback
+		// This call needs to be made before we can proceed to other calls in the Social API
+		Social.localUser.Authenticate (ProcessAuthentication);
 
 		DontDestroyOnLoad(this.gameObject);
 	}
@@ -83,5 +91,59 @@ public class SocialController : MonoBehaviour {
 			new System.Uri("http://alphaquestgames.com/wp-content/uploads/2014/12/icone-site-orc.png")
 		);
 	}
+	#endregion
+
+
+	#region GameCenter
+
+	// This function gets called when Authenticate completes
+	// Note that if the operation is successful, Social.localUser will contain data from the server. 
+	void ProcessAuthentication (bool success) {
+		if (success) {
+			Debug.Log ("Authenticated, checking achievements");
+
+			// Request loaded achievements, and register a callback for processing them
+			Social.LoadAchievements (ProcessLoadedAchievements);
+
+			//Post the highscore that the player already has
+			//PostScore(ScoreManager.instance.score);
+		}
+		else
+			Debug.Log ("Failed to authenticate");
+	}
+
+	// This function gets called when the LoadAchievement call completes
+	void ProcessLoadedAchievements (IAchievement[] achievements) {
+		if (achievements.Length == 0)
+			Debug.Log ("Error: no achievements found");
+		else
+			Debug.Log ("Got " + achievements.Length + " achievements");
+
+		// You can also call into the functions like this
+		Social.ReportProgress ("Achievement01", 100.0, result => {
+			if (result)
+				Debug.Log ("Successfully reported achievement progress");
+			else
+				Debug.Log ("Failed to report achievement");
+		});
+	}
+
+	public void ShowLeaderboard () {
+		Debug.Log("SHOW LEADERBOARD");
+		Social.ShowLeaderboardUI();
+	}
+
+	public void PostScore (int score) {
+		Debug.Log("Posting score...");
+		Social.ReportScore((long)score, leaderboardId, HighScoreCheck);
+	}
+
+	void HighScoreCheck (bool result) {
+		if(result)
+			Debug.Log("score submission successful");
+		else
+			Debug.Log("score submission failed");
+	}
+
 	#endregion
 }
