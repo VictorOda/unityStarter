@@ -28,7 +28,7 @@ public class AdsController : MonoBehaviour {
 		DontDestroyOnLoad(this.gameObject);
 
 		#if UNITY_ANDROID
-		adMobInterstitialId = androidAdMobId;
+		adMobInterstitialId = androidAdMobInterstitialId;
 		adMobBannerId = androidAdMobBannerId;
 		#elif UNITY_IPHONE
 		adMobInterstitialId = iOSAdMobInterstitialId;
