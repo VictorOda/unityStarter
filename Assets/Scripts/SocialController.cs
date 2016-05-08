@@ -2,6 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.SocialPlatforms;
+#if UNITY_ANDROID
+using GooglePlayGames;
+using GooglePlayGames.BasicApi;
+#endif
 using Facebook.Unity;
 
 
@@ -13,7 +17,7 @@ public class SocialController : MonoBehaviour {
 	private List<string> permissions = new List<string>() {"publish_actions"};
 
 	// Social
-	private string leaderboardId = "";
+	private string leaderboardId = "";	// Use the same ID for both Game Center and Google Play
 
 	void Awake ()
 	{
@@ -32,7 +36,11 @@ public class SocialController : MonoBehaviour {
 
 		// Authenticate and register a ProcessAuthentication callback
 		// This call needs to be made before we can proceed to other calls in the Social API
+		#if UNITY_IOS
 		Social.localUser.Authenticate (ProcessAuthentication);
+		#elif UNITY_ANDROID
+		StartGooglePlayGames();
+		#endif
 
 		DontDestroyOnLoad(this.gameObject);
 	}
@@ -94,8 +102,28 @@ public class SocialController : MonoBehaviour {
 	#endregion
 
 
-	#region GameCenter
+	#region Leaderboard
 
+	public void ShowLeaderboard () {
+		#if UNITY_IOS
+		ShowLeaderboardGameCenter();
+		#elif UNITY_ANDROID
+		LoginGooglePlayGames();
+		#endif
+	}
+
+	public void PostScore (int score) {
+		#if UNITY_IOS
+		PostScoreGameCenter(score);
+		#elif UNITY_ANDROID
+		PostScoreGooglePlayGames(score);
+		#endif
+	}
+
+	#endregion
+
+	#region GameCenter
+	#if UNITY_IOS
 	// This function gets called when Authenticate completes
 	// Note that if the operation is successful, Social.localUser will contain data from the server. 
 	void ProcessAuthentication (bool success) {
@@ -128,12 +156,12 @@ public class SocialController : MonoBehaviour {
 		});
 	}
 
-	public void ShowLeaderboard () {
+	public void ShowLeaderboardGameCenter () {
 		Debug.Log("SHOW LEADERBOARD");
 		Social.ShowLeaderboardUI();
 	}
 
-	public void PostScore (int score) {
+	public void PostScoreGameCenter (int score) {
 		Debug.Log("Posting score...");
 		Social.ReportScore((long)score, leaderboardId, HighScoreCheck);
 	}
@@ -144,6 +172,47 @@ public class SocialController : MonoBehaviour {
 		else
 			Debug.Log("score submission failed");
 	}
+	#endif
+	#endregion
 
+	#region GooglePlayGames
+	#if UNITY_ANDROID
+	private void StartGooglePlayGames () {
+		PlayGamesClientConfiguration config = new PlayGamesClientConfiguration.Builder()
+			// enables saving game progress.
+			.EnableSavedGames()
+			// require access to a player's Google+ social graph to sign in
+			.RequireGooglePlus()
+			.Build();
+
+		PlayGamesPlatform.InitializeInstance(config);
+		// recommended for debugging:
+		PlayGamesPlatform.DebugLogEnabled = true;
+		// Activate the Google Play Games platform
+		PlayGamesPlatform.Activate();
+	}
+
+	public void LoginGooglePlayGames () {
+		// authenticate user:
+		Social.localUser.Authenticate((bool success) => {
+			// handle success or failure
+			if(success) {
+				// Show leaderboard
+				ShowLeaderboardGooglePlayGames();
+			}
+		});
+	}
+
+	public void PostScoreGooglePlayGames (int score) {
+		Social.ReportScore(score, leaderboardId, (bool success) => {
+			// handle success or failure
+		});
+	}
+
+	public void ShowLeaderboardGooglePlayGames () {
+		// show leaderboard UI
+		PlayGamesPlatform.Instance.ShowLeaderboardUI(leaderboardId);
+	}
+	#endif
 	#endregion
 }
