@@ -24,13 +24,15 @@ public class Store : MonoBehaviour {
 		if(!instance)
 			instance = this;
 
-		// Get elements
-		txtBuyButton = buyButton.gameObject.transform.GetChild(0).GetComponent<Text>();
+		if(SceneController.instance.CurrentSceneName() == "Menu") {
+			// Get elements
+			txtBuyButton = buyButton.gameObject.transform.GetChild(0).GetComponent<Text>();
 
-		// Set values
-		selectedItem = 0;
+			// Set values
+			selectedItem = 0;
 
-		UpdateUI();
+			UpdateUI();
+		}
 	}
 
 	public void ChangeItem(bool next) {

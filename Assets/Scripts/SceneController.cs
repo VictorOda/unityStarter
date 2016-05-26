@@ -14,4 +14,8 @@ public class SceneController : MonoBehaviour {
 	public void ChangeScene(string sceneName) {
 		SceneManager.LoadScene(sceneName);
 	}
+
+	public string CurrentSceneName() {
+		return SceneManager.GetActiveScene().name;
+	}
 }
