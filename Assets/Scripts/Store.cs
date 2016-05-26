@@ -70,4 +70,8 @@ public class Store : MonoBehaviour {
 	public void BuyItem() {
 		ShopController.instance.BuyProductID(itemsIds[selectedItem]);
 	}
+
+	public void Back() {
+		SceneController.instance.ChangeScene("Menu");
+	}
 }
